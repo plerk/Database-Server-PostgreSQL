@@ -35,6 +35,14 @@ package Database::Server::PostgreSQL {
     my($self, @command) = @_;
     Database::Server::PostgreSQL::CommandResult->new(@command);
   }
+
+=head1 METHODS
+
+=head2 create
+
+ my $server->create;
+
+=cut
   
   sub create
   {

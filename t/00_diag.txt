@@ -1,0 +1,11 @@
+Capture::Tiny
+Carp
+File::Temp
+File::Which
+Module::Build
+Moose
+MooseX::Types::Path::Class
+Path::Class
+Test::More
+experimental
+namespace::autoclean
