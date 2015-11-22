@@ -9,7 +9,7 @@ subtest 'normal' => sub {
   my $data = tempdir( CLEANUP => 1 );
   my $server = Database::Server::PostgreSQL->new( data => $data );
   isa_ok $server, 'Database::Server::PostgreSQL';
-  ok $server->initdb ne '', "server.initdb = @{[ $server->initdb ]}";
+  ok $server->pg_ctl ne '', "server.pg_ctl = @{[ $server->pg_ctl ]}";
 
   my $ret = eval { $server->create };
   is $@, '', 'creating server did not crash';

@@ -13,13 +13,16 @@ package Database::Server::PostgreSQL {
   use Carp qw( croak );
   use namespace::autoclean;
   
-  has initdb => (
+  has pg_ctl => (
     is      => 'ro',
     isa     => File,
     lazy    => 1,
     coerce  => 1,
     default => sub { 
-      scalar which('initdb') // die "unable to find initdb";
+      # TODO, when which fails, pg_config --bindir
+      # can probably be used to determine location
+      # of server executables.
+      scalar which('pg_ctl') // die "unable to find initdb";
     },
   );
   
@@ -48,7 +51,7 @@ package Database::Server::PostgreSQL {
   {
     my($self) = @_;
     croak "@{[ $self->data ]} is not empty" if $self->data->children;
-    my $ret = $self->_run('initdb', -D => $self->data);
+    my $ret = $self->_run('pg_ctl', -D => $self->data, 'init');
     $ret;
   }
   
