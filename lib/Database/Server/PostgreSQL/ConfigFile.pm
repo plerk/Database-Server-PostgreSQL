@@ -73,7 +73,7 @@ sub ConfigLoad
       $value =~ s/(?<![\\])\\([0-7]{1,3}|.)/_escape_char($1)/eg;
       $value =~ s/''/'/g;
     }
-    elsif(s/^(.*)\s*(|#.*)$//)
+    elsif(s/^([^#\s]*)\s*(|#.*)$//)
     {
       $value = $1;
     }
