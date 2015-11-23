@@ -52,30 +52,50 @@ sub ConfigLoad
   open my $fh, '<', $filename;
   while(<$fh>)
   {
-    # TODO: handle # in a string value: '#'
-    s/#.*$//;
-    next if s/^\s*$//;
-    
-    if(/^\s*([a-z_0-9]+)\s*=\s*(.*?)\s*$/i)
-    {
-      my($name,$value) = ($1,$2);
-      $name = lc $name;
+    my $orig = $_;
+  
+    next if /^\s*$/ || /^\s*#.*$/;
 
-      if($value =~ /^\'(.*)\'$/)
-      {
-        $value = $1;
-        $value =~ s{''}{'};
-        $value =~ s{\\'}{'};
-        $value =~ s{\\\\}{\\}; # ?
-      }
-      
-      $config{$name} = $value;
-      
+    my $name;
+    
+    if(s/^\s*([a-z_0-9]+)\s*=\s*//i)
+    { $name = lc $1 }
+    else
+    { warn "unable to parse name from $orig"; next }
+    
+    my $value;
+
+    # let the line noise begin!    
+    if(s/^'(.*?)(?<!['\\])'\s*(|#.*)$//)
+    {
+      $value = $1;
+      $value =~ s/\\([0-7]{1,3}|.)/_escape_char($1)/eg;
+      $value =~ s/''/'/g;
     }
+    elsif(s/^(.*)\s*(|#.*)$//)
+    {
+      $value = $1;
+    }
+    else
+    { warn "unabel to parse value from $orig"; next }
+      
+    $config{$name} = $value;
   }
   close $fh;
   
   \%config;
+}
+
+sub _escape_char
+{
+  my($c) = @_;
+  return "\b" if $c eq 'b';
+  return "\f" if $c eq 'f';
+  return "\n" if $c eq 'n';
+  return "\r" if $c eq 'r';
+  return "\t" if $c eq 't';
+  return chr oct $c if $c =~ /^[0-7]+$/;
+  $c;
 }
 
 =head2 ConfigSave

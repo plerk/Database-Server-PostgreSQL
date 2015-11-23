@@ -19,6 +19,9 @@ subtest load => sub {
     value_with_quote = 'Foo''Bar'
     Key_With_Caps = 'SomethingDifferent'
     value_With_quotex = 'Baz\'Barf'
+    value_with_hash = ' x#y ' # foo
+    tab = 'x\ty'
+    octal = '\141bc'
   });
   
   my $config = ConfigLoad($file);
@@ -35,6 +38,9 @@ subtest load => sub {
       value_with_quote  => "Foo'Bar",
       value_with_quotex => "Baz'Barf",
       key_with_caps     => 'SomethingDifferent',
+      value_with_hash   => ' x#y ',
+      tab               => "x\ty",
+      octal             => 'abc',
     },
     'load worked',
   ;
