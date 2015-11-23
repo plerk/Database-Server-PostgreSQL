@@ -20,7 +20,7 @@ package Database::Server::PostgreSQL {
     lazy    => 1,
     coerce  => 1,
     default => sub { 
-      scalar which('pg_config');
+      scalar which('pg_config') // die "unable to find pg_config";
     },
   );
   

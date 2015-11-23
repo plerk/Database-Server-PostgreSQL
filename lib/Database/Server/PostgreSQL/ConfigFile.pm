@@ -3,6 +3,7 @@ package Database::Server::PostgreSQL::ConfigFile;
 use strict;
 use warnings;
 use autodie;
+use Carp ();
 use base qw( Exporter );
 
 # ABSTRACT: Load and save PostgreSQL server configuration files
@@ -58,7 +59,7 @@ sub ConfigLoad
 
     my $name;
     
-    if(s/^\s*([a-z_0-9]+)\s*=\s*//i)
+    if(s/^\s*([a-z_][a-z_0-9]*)\s*=\s*//i)
     { $name = lc $1 }
     else
     { warn "unable to parse name from $orig"; next }
@@ -69,7 +70,7 @@ sub ConfigLoad
     if(s/^'(.*?)(?<!['\\])'\s*(|#.*)$//)
     {
       $value = $1;
-      $value =~ s/\\([0-7]{1,3}|.)/_escape_char($1)/eg;
+      $value =~ s/(?<![\\])\\([0-7]{1,3}|.)/_escape_char($1)/eg;
       $value =~ s/''/'/g;
     }
     elsif(s/^(.*)\s*(|#.*)$//)
@@ -89,7 +90,7 @@ sub ConfigLoad
 sub _escape_char
 {
   my($c) = @_;
-  return "\b" if $c eq 'b';
+  return "\007" if $c eq 'b';
   return "\f" if $c eq 'f';
   return "\n" if $c eq 'n';
   return "\r" if $c eq 'r';
@@ -110,6 +111,26 @@ given filename.
 sub ConfigSave
 {
   my($filename, $config) = @_;
+  
+  open my $fh, '>', $filename;
+  foreach my $name (sort keys %$config)
+  {
+    Carp::croak "$name is not a legal identifier"
+      unless $name =~ /^[a-z_][a-z_0-9]*$/;
+    
+    my $value = $config->{$name} . '';
+    $value =~ s/\\/\\\\/g;
+    $value =~ s/\n/"\\n"/eg;
+    $value =~ s/\f/"\\f"/eg;
+    $value =~ s/\007/"\\b"/eg;
+    $value =~ s/\r/"\\r"/eg;
+    $value =~ s/\t/"\\t"/eg;
+    $value =~ s/([^[:print:]])/sprintf "\\%03o", ord $1 /eg;
+    $value =~ s/'/''/g;
+    
+    print $fh "$name = '$value'\n";
+  }
+  close $fh;
 }
 
 1;
@@ -122,7 +143,7 @@ the writing out a configuration file that the PostgreSQL
 server can use.  It by no means supports every feature or
 edge case of the PostgreSQL configuration format (patches
 welcome, of course).  In particular, it does not support
-including other configuration files, and does not preserve
-comments.
+including other configuration files, non-ASCII encoding 
+and does not preserve comments.
 
 =cut
