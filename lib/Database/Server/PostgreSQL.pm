@@ -11,7 +11,18 @@ package Database::Server::PostgreSQL {
   use MooseX::Types::Path::Class qw( File Dir );
   use File::Which qw( which );
   use Carp qw( croak );
+  use Path::Class qw( dir );
   use namespace::autoclean;
+
+  has pg_config => (
+    is      => 'ro',
+    isa     => File,
+    lazy    => 1,
+    coerce  => 1,
+    default => sub { 
+      scalar which('pg_config');
+    },
+  );
   
   has pg_ctl => (
     is      => 'ro',
@@ -22,7 +33,18 @@ package Database::Server::PostgreSQL {
       # TODO, when which fails, pg_config --bindir
       # can probably be used to determine location
       # of server executables.
-      scalar which('pg_ctl') // die "unable to find initdb";
+      scalar which('pg_ctl') // do {
+        my($self) = @_;
+        my $ret = $self->_run($self->pg_config, '--bindir');
+        if($ret->is_success)
+        {
+          my $out = $ret->out;
+          chomp $out;
+          my $file = dir($out)->file('pg_ctl');
+          return $file if -x $file;
+        }
+        undef;
+      } // die "unable to find initdb";
     },
   );
   
@@ -51,7 +73,7 @@ package Database::Server::PostgreSQL {
   {
     my($self) = @_;
     croak "@{[ $self->data ]} is not empty" if $self->data->children;
-    my $ret = $self->_run('pg_ctl', -D => $self->data, 'init');
+    my $ret = $self->_run($self->pg_ctl, -D => $self->data, 'init');
     $ret;
   }
   
