@@ -1,5 +1,6 @@
 Capture::Tiny
 Carp
+Exporter
 File::Temp
 File::Which
 Module::Build
@@ -7,5 +8,7 @@ Moose
 MooseX::Types::Path::Class
 Path::Class
 Test::More
+YAML::XS
+autodie
 experimental
 namespace::autoclean
