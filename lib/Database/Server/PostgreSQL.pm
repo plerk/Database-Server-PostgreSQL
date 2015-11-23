@@ -5,7 +5,6 @@ use 5.020;
 package Database::Server::PostgreSQL {
 
   # ABSTRACT: Interface for PostgreSQL server instance
-  # VERSION
   
 =head1 SYNOPSIS
 
@@ -16,8 +15,22 @@ package Database::Server::PostgreSQL {
  );
  
  $server->create;
+ $server->start;
+ $server->stop;
+ 
+ if($server->is_up)
+ {
+   say "server is up";
+ }
+ else
+ {
+   say "server is down";
+ }
 
 =head1 DESCRIPTION
+
+This class provides a simple interface for creating, starting, stopping,
+restarting and reloading PostgreSQL instances.
 
 =cut
 
@@ -128,6 +141,10 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 
  $server->create;
 
+Create the PostgreSQL instance.  This involves calling C<initdb>
+or C<pg_ctl initdb> with the appropriate options to produce the
+data files necessary for running the PostgreSQL instance.
+
 =cut
   
   sub create
@@ -141,6 +158,8 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 
  $server->start;
 
+Starts the PostgreSQL instance.
+
 =cut
 
   sub start
@@ -152,6 +171,8 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 =head2 stop
 
  $server->stop;
+
+Stops the PostgreSQL instance.
 
 =cut
 
@@ -165,6 +186,8 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 
  $server->restart;
 
+Restarts the PostgreSQL instance.
+
 =cut
 
   sub restart
@@ -177,6 +200,8 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 
  $server->reload;
 
+Signals the running PostgreSQL instance to reload its configuration file.
+
 =cut
 
   sub reload
@@ -188,6 +213,8 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 =head2 is_up
 
  my $bool = $server->is_up;
+
+Checks to see if the PostgreSQL instance is up.
 
 =cut
 
@@ -202,6 +229,9 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
 
  $server->config->{'new'} = 'value';
  $server->save_config;
+
+Save the configuration settings to the PostgreSQL instance 
+C<postgresql.conf> file.
 
 =cut
   

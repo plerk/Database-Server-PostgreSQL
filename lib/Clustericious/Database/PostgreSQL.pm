@@ -1,9 +1,11 @@
-package Clustericious::Database::PostgreSQL;
-
 use strict;
 use warnings;
+use 5.020;
 
-# ABSTRACT: Handle PostgreSQL database migrations for Clustericious applications
-# VERSION
+package Clustericious::Database::PostgreSQL {
+
+  # ABSTRACT: Handle PostgreSQL database migrations for Clustericious applications
+
+}
 
 1;

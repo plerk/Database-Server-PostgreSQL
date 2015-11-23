@@ -1,14 +1,11 @@
 Capture::Tiny
-Carp
-Exporter
-File::Temp
+ExtUtils::MakeMaker
 File::Which
-Module::Build
 Moose
 MooseX::Types::Path::Class
 Path::Class
+PerlX::Maybe
+PerlX::Maybe::XS
 Test::More
 YAML::XS
-autodie
-experimental
 namespace::autoclean

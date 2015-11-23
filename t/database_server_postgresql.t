@@ -5,6 +5,7 @@ use Database::Server::PostgreSQL;
 use File::Temp qw( tempdir );
 use Path::Class qw( dir );
 use IO::Socket::IP;
+use File::Spec;
 
 subtest 'normal' => sub {
   my $data = dir( tempdir( CLEANUP => 1 ) );
@@ -30,6 +31,10 @@ subtest 'normal' => sub {
 
   $server->config->{listen_addresses} = '';
   $server->config->{port} = IO::Socket::IP->new(Listen => 5, LocalAddr => '127.0.0.1')->sockport;
+  # Note: this used to be called unix_socket_directory,
+  # and we may need to do some version detection in
+  # the future.
+  $server->config->{unix_socket_directories} = File::Spec->tmpdir;
 
   $server->save_config;
   note '[postgresql.conf]';
@@ -50,6 +55,13 @@ subtest 'normal' => sub {
   };
 
   is $server->is_up, 1, 'server is up after start';
+  
+  unless($server->is_up)
+  {
+    note '== server log: ==';
+    note $server->data->file('server.log')->slurp;
+    note '-- server log: --';
+  }
 
   subtest stop => sub {
     plan tests => 2;
