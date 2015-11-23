@@ -97,10 +97,10 @@ sub ConfigSave
 =head1 CAVEATS
 
 This module is intended only for loading the configuration
-file produced by C<initdb>, making minior alterations and
-the writing out a configuration file that the postgres
+file produced by C<initdb>, making minor alterations and
+the writing out a configuration file that the PostgreSQL
 server can use.  It by no means supports every feature or
-edge case of the postgresql configuration format (patches
+edge case of the PostgreSQL configuration format (patches
 welcome, of course).  In particular, it does not support
 including other configuration files, and does not preserve
 comments.

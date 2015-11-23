@@ -6,6 +6,10 @@ pod_spelling_system:
   stopwords:
     - PostgreSQL
     - Clustericious
+    - ConfigLoad
+    - ConfigSave
+    - Postgres
+    - PostgreSQL
 
 pod_coverage:
   skip: 0
