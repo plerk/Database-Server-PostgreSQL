@@ -291,7 +291,13 @@ package Database::Server::PostgreSQL::Version {
   sub major { shift->[0] }
   sub minor { shift->[1] }
   sub patch { shift->[2] }
-  
+
+  sub compat
+  {
+    my($self) = @_;
+    join '.', $self->major, $self->minor;
+  }
+
   sub as_string { join '.', shift->@* }
 
 }

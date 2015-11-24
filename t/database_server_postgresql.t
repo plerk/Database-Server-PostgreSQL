@@ -19,12 +19,13 @@ subtest 'normal' => sub {
   ok $server->pg_ctl ne '', "server.pg_ctl = @{[ $server->pg_ctl ]}";
 
   subtest version => sub {
-    plan tests => 4;
+    plan tests => 5;
     my $version = $server->version;
     like "$version", qr{^[0-9]+\.[0-9]+\.[0-9]+$}, "version stringifies ($version)";
     like $version->major, qr{^[0-9]+$}, 'verson.major';
     like $version->minor, qr{^[0-9]+$}, 'verson.minor';
     like $version->patch, qr{^[0-9]+$}, 'verson.patch';
+    like $version->compat, qr{^[0-9]+\.[0-9]+$}, 'verson.compat';
   };
 
   subtest create => sub {
@@ -42,10 +43,11 @@ subtest 'normal' => sub {
 
   $server->config->{listen_addresses} = '';
   $server->config->{port} = IO::Socket::IP->new(Listen => 5, LocalAddr => '127.0.0.1')->sockport;
-  # Note: this used to be called unix_socket_directory,
-  # and we may need to do some version detection in
-  # the future.
-  $server->config->{unix_socket_directories} = File::Spec->tmpdir;
+  $server->config->{
+    $server->version->compat >= 9.3 
+      ? 'unix_socket_directories'
+      : 'unix_socket_directory'
+  } = File::Spec->tmpdir;
 
   $server->save_config;
   note '[postgresql.conf]';
