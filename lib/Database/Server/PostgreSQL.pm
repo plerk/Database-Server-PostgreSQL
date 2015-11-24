@@ -270,6 +270,7 @@ package Database::Server::PostgreSQL::Version {
 
   use Carp qw( croak );
   use overload '""' => sub { shift->as_string };
+  use experimental 'postderef';
   use namespace::autoclean;
 
   sub new
