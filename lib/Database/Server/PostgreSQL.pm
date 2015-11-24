@@ -135,6 +135,30 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
     Database::Server::PostgreSQL::CommandResult->new(@command);
   }
 
+=head2 version
+
+ my $version = $server->version;
+ "$version";
+ my $major = $version->major;
+ my $minor = $version->minor;
+ my $patch = $version->patch;
+
+Returns the version of the PostgreSQL server.
+
+=cut
+
+  has version => (
+    is      => 'ro',
+    isa     => 'Database::Server::PostgreSQL::Version',
+    default => sub {
+      my($self) = @_;
+      my $ret = $self->_run($self->pg_config, '--version');
+      $ret->is_success
+        ? Database::Server::PostgreSQL::Version->new($ret->out)
+        : croak 'Unable to determine version from pg_config';
+    },
+  );
+
 =head1 METHODS
 
 =head2 create
@@ -243,7 +267,34 @@ C<postgresql.conf> file.
   
   __PACKAGE__->meta->make_immutable;
 
-};
+}
+
+package Database::Server::PostgreSQL::Version {
+
+  use Carp qw( croak );
+  use overload '""' => sub { shift->as_string };
+  use namespace::autoclean;
+
+  sub new
+  {
+    my($class, $version) = @_;
+    if($version =~ /([0-9]+)\.([0-9]+)\.([0-9]+)/)
+    {
+      return bless [$1,$2,$3], $class;
+    }
+    else
+    {
+      croak "unable to determine version based on '$version'";
+    }
+  }
+  
+  sub major { shift->[0] }
+  sub minor { shift->[1] }
+  sub patch { shift->[2] }
+  
+  sub as_string { join '.', shift->@* }
+
+}
 
 package Database::Server::PostgreSQL::CommandResult {
 

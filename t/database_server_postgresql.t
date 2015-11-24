@@ -8,6 +8,8 @@ use IO::Socket::IP;
 use File::Spec;
 
 subtest 'normal' => sub {
+  plan tests => 9;
+  
   my $data = dir( tempdir( CLEANUP => 1 ) );
   my $server = Database::Server::PostgreSQL->new(
     data => $data,
@@ -15,6 +17,15 @@ subtest 'normal' => sub {
   );
   isa_ok $server, 'Database::Server::PostgreSQL';
   ok $server->pg_ctl ne '', "server.pg_ctl = @{[ $server->pg_ctl ]}";
+
+  subtest version => sub {
+    plan tests => 4;
+    my $version = $server->version;
+    like "$version", qr{^[0-9]+\.[0-9]+\.[0-9]+$}, "version stringifies ($version)";
+    like $version->major, qr{^[0-9]+$}, 'verson.major';
+    like $version->minor, qr{^[0-9]+$}, 'verson.minor';
+    like $version->patch, qr{^[0-9]+$}, 'verson.patch';
+  };
 
   subtest create => sub {
     plan tests => 2;
