@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use 5.020;
+use Database::Server;
 
 package Database::Server::PostgreSQL {
 
@@ -43,6 +44,8 @@ restarting and reloading PostgreSQL instances.
   use PerlX::Maybe qw( maybe );
   use namespace::autoclean;
 
+  with 'Database::Server::Role::Server';
+
   has pg_config => (
     is      => 'ro',
     isa     => File,
@@ -64,7 +67,7 @@ restarting and reloading PostgreSQL instances.
       # of server executables.
       scalar which('pg_ctl') // do {
         my($self) = @_;
-        my $ret = $self->_run($self->pg_config, '--bindir');
+        my $ret = $self->run($self->pg_config, '--bindir');
         if($ret->is_success)
         {
           my $out = $ret->out;
@@ -129,12 +132,6 @@ Log file.  Optional.  Passed to PostgreSQL when L</start> is called.
     coerce  => 1,
   );
 
-  sub _run
-  {
-    my($self, @command) = @_;
-    Database::Server::PostgreSQL::CommandResult->new(@command);
-  }
-
 =head2 version
 
  my $version = $server->version;
@@ -152,7 +149,7 @@ Returns the version of the PostgreSQL server.
     isa     => 'Database::Server::PostgreSQL::Version',
     default => sub {
       my($self) = @_;
-      my $ret = $self->_run($self->pg_config, '--version');
+      my $ret = $self->run($self->pg_config, '--version');
       $ret->is_success
         ? Database::Server::PostgreSQL::Version->new($ret->out)
         : croak 'Unable to determine version from pg_config';
@@ -175,7 +172,7 @@ data files necessary for running the PostgreSQL instance.
   {
     my($self) = @_;
     croak "@{[ $self->data ]} is not empty" if $self->data->children;
-    $self->_run($self->pg_ctl, -D => $self->data, 'init');    
+    $self->run($self->pg_ctl, -D => $self->data, 'init');    
   }
 
 =head2 start
@@ -189,7 +186,7 @@ Starts the PostgreSQL instance.
   sub start
   {
     my($self) = @_;
-    $self->_run($self->pg_ctl, -D => $self->data, 'start', maybe -l => $self->log);
+    $self->run($self->pg_ctl, -D => $self->data, 'start', maybe -l => $self->log);
   }
 
 =head2 stop
@@ -203,7 +200,7 @@ Stops the PostgreSQL instance.
   sub stop
   {
     my($self, $mode) = @_;
-    $self->_run($self->pg_ctl, -D => $self->data, 'stop', maybe -m => $mode);
+    $self->run($self->pg_ctl, -D => $self->data, 'stop', maybe -m => $mode);
   }
 
 =head2 restart
@@ -217,7 +214,7 @@ Restarts the PostgreSQL instance.
   sub restart
   {
     my($self, $mode) = @_;
-    $self->_run($self->pg_ctl, -D => $self->data, 'restart', maybe -m => $mode);
+    $self->run($self->pg_ctl, -D => $self->data, 'restart', maybe -m => $mode);
   }
 
 =head2 reload
@@ -231,7 +228,7 @@ Signals the running PostgreSQL instance to reload its configuration file.
   sub reload
   {
     my($self, $mode) = @_;
-    $self->_run($self->pg_ctl, -D => $self->data, 'reload');
+    $self->run($self->pg_ctl, -D => $self->data, 'reload');
   }
 
 =head2 is_up
@@ -245,7 +242,7 @@ Checks to see if the PostgreSQL instance is up.
   sub is_up
   {
     my($self) = @_;
-    my $ret = $self->_run($self->pg_ctl, -D => $self->data, 'status');
+    my $ret = $self->run($self->pg_ctl, -D => $self->data, 'status');
     !!$ret->is_success;
   }
 
@@ -300,57 +297,6 @@ package Database::Server::PostgreSQL::Version {
 
   sub as_string { join '.', shift->@* }
 
-}
-
-package Database::Server::PostgreSQL::CommandResult {
-
-  use Moose;
-  use Capture::Tiny qw( capture );
-  use Carp qw( croak );
-  use experimental qw( postderef );
-  use namespace::autoclean;
-
-  sub BUILDARGS
-  {
-    my $class = shift;
-    my %args = ( command => [map { "$_" } @_] );
-    
-    ($args{out}, $args{err}) = capture { system $args{command}->@* };
-    croak "failed to execute @{[ $args{command}->@* ]}: $?" if $? == -1;
-    my $signal = $? & 127;
-    croak "command @{[ $args{command}->@* ]} killed by signal $signal" if $args{signal};
-
-    $args{exit}   = $args{signal} ? 0 : $? >> 8;
-        
-    \%args;
-  }
-
-  has command => (
-    is  => 'ro',
-    isa => 'ArrayRef[Str]',
-  );
-
-  has out => (
-    is  => 'ro',
-    isa => 'Str',
-  );
-
-  has err => (
-    is  => 'ro',
-    isa => 'Str',
-  );
-  
-  has exit => (
-    is  => 'ro',
-    isa => 'Int',
-  );
-  
-  sub is_success
-  {
-    !shift->exit;
-  }
-  
-  __PACKAGE__->meta->make_immutable;
 }
 
 1;
