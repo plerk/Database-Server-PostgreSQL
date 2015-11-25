@@ -63,7 +63,7 @@ restarting and reloading PostgreSQL instances.
     coerce  => 1,
     default => sub { 
       my($self) = @_;
-      my $ret = $self->_run($self->pg_config, '--bindir');
+      my $ret = $self->run($self->pg_config, '--bindir');
       $ret->is_success
         ? do {
             my $out = $ret->out;
