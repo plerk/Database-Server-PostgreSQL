@@ -62,21 +62,16 @@ restarting and reloading PostgreSQL instances.
     lazy    => 1,
     coerce  => 1,
     default => sub { 
-      # TODO, when which fails, pg_config --bindir
-      # can probably be used to determine location
-      # of server executables.
-      scalar which('pg_ctl') // do {
-        my($self) = @_;
-        my $ret = $self->run($self->pg_config, '--bindir');
-        if($ret->is_success)
-        {
-          my $out = $ret->out;
-          chomp $out;
-          my $file = dir($out)->file('pg_ctl');
-          return $file if -x $file;
-        }
-        undef;
-      } // die "unable to find initdb";
+      my($self) = @_;
+      my $ret = $self->_run($self->pg_config, '--bindir');
+      $ret->is_success
+        ? do {
+            my $out = $ret->out;
+            chomp $out;
+            my $file = dir($out)->file('pg_ctl');
+            return $file if -x $file;
+          }
+        : die "unable to find pg_ctl";
     },
   );
 
