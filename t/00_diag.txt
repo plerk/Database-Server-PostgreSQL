@@ -8,6 +8,4 @@ Path::Class
 PerlX::Maybe
 PerlX::Maybe::XS
 Test::More
-YAML::XS
 namespace::autoclean
-overload

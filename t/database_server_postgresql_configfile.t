@@ -46,8 +46,8 @@ subtest load => sub {
   
   my $config = ConfigLoad($file);
 
-  use YAML::XS qw( Dump );
-  note Dump($config);
+  #use YAML::XS qw( Dump );
+  #note Dump($config);
   
   is_deeply
     $config,
