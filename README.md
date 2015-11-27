@@ -1,6 +1,113 @@
-# Clustericious::Database::PostgreSQL
+# Database::Server::PostgreSQL
 
-Handle PostgreSQL database migrations for Clustericious applications
+Interface for PostgreSQL server instance
+
+# SYNOPSIS
+
+    use Database::Server::PostgreSQL;
+    
+    my $server = Database::Server::PostgreSQL->new(
+      data => "/tmp/dataroot",
+    );
+    
+    $server->create;
+    $server->start;
+    $server->stop;
+    
+    if($server->is_up)
+    {
+      say "server is up";
+    }
+    else
+    {
+      say "server is down";
+    }
+
+# DESCRIPTION
+
+This class provides a simple interface for creating, starting, stopping,
+restarting and reloading PostgreSQL instances.
+
+# ATTRIBUTES
+
+## config
+
+    my $hash = $server->config;
+
+Server configuration.  If you make changes you need to
+call the ["save\_config"](#save_config) method below.
+
+## data
+
+    my $dir = $server->data;
+
+The data directory root for the server.  This
+attribute is required.
+
+## log
+
+    my $file = $server->log;
+    $server->log($file);
+
+Log file.  Optional.  Passed to PostgreSQL when ["start"](#start) is called.
+
+## version
+
+    my $version = $server->version;
+    "$version";
+    my $major = $version->major;
+    my $minor = $version->minor;
+    my $patch = $version->patch;
+
+Returns the version of the PostgreSQL server.
+
+# METHODS
+
+## create
+
+    $server->create;
+
+Create the PostgreSQL instance.  This involves calling `initdb`
+or `pg_ctl initdb` with the appropriate options to produce the
+data files necessary for running the PostgreSQL instance.
+
+## start
+
+    $server->start;
+
+Starts the PostgreSQL instance.
+
+## stop
+
+    $server->stop;
+
+Stops the PostgreSQL instance.
+
+## restart
+
+    $server->restart;
+
+Restarts the PostgreSQL instance.
+
+## reload
+
+    $server->reload;
+
+Signals the running PostgreSQL instance to reload its configuration file.
+
+## is\_up
+
+    my $bool = $server->is_up;
+
+Checks to see if the PostgreSQL instance is up.
+
+## save\_config
+
+    $server->config->{'new'} = 'value';
+    $server->save_config;
+
+Save the configuration settings to the PostgreSQL instance 
+`postgresql.conf` file.
 
 # AUTHOR
 
