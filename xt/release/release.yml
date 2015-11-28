@@ -9,6 +9,7 @@ pod_spelling_system:
     - ConfigSave
     - Postgres
     - PostgreSQL
+    - env
 
 pod_coverage:
   skip: 0

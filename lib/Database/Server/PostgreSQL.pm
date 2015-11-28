@@ -177,7 +177,7 @@ Returns the version of the PostgreSQL server.
  Database:Server::PostgreSQL->create($root);
 
 (class method)
-Create, initalize a PostgreSQL instance, rooted under C<$root>.  Returns
+Create, initialize a PostgreSQL instance, rooted under C<$root>.  Returns
 a hash reference which can be passed into C<new> to reconstitute the 
 database instance.  Example:
 
@@ -269,7 +269,7 @@ Usually this includes the correct values for C<PGHOST> and C<PGPORT>.
 
  $server->init;
 
-Initalize the PostgreSQL instance.  This involves calling C<initdb>
+Initialize the PostgreSQL instance.  This involves calling C<initdb>
 or C<pg_ctl initdb> with the appropriate options to produce the
 data files necessary for running the PostgreSQL instance.
 

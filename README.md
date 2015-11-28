@@ -10,7 +10,7 @@ Interface for PostgreSQL server instance
       data => "/tmp/dataroot",
     );
     
-    $server->create;
+    $server->init;
     $server->start;
     $server->stop;
     
@@ -29,6 +29,12 @@ This class provides a simple interface for creating, starting, stopping,
 restarting and reloading PostgreSQL instances.
 
 # ATTRIBUTES
+
+## config\_file
+
+    my $file = $server->config_file;
+
+Path to the `postgresql.conf` file.
 
 ## config
 
@@ -65,9 +71,29 @@ Returns the version of the PostgreSQL server.
 
 ## create
 
-    $server->create;
+    Database:Server::PostgreSQL->create($root);
 
-Create the PostgreSQL instance.  This involves calling `initdb`
+(class method)
+Create, initialize a PostgreSQL instance, rooted under `$root`.  Returns
+a hash reference which can be passed into `new` to reconstitute the 
+database instance.  Example:
+
+    my $arg = Database::Server::PostgreSQL->create("/tmp/foo");
+    my $server = Database::Server::PostgreSQL->new(%$arg);
+
+## env
+
+    my %env = $server->env;
+
+Returns a hash of the environment variables needed to connect to the
+PostgreSQL instance with the native tools (for example `psql`).
+Usually this includes the correct values for `PGHOST` and `PGPORT`.
+
+## init
+
+    $server->init;
+
+Initialize the PostgreSQL instance.  This involves calling `initdb`
 or `pg_ctl initdb` with the appropriate options to produce the
 data files necessary for running the PostgreSQL instance.
 
