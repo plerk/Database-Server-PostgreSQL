@@ -15,7 +15,7 @@ package Database::Server::PostgreSQL {
    data => "/tmp/dataroot",
  );
  
- $server->create;
+ $server->init;
  $server->start;
  $server->stop;
  
@@ -77,6 +77,25 @@ restarting and reloading PostgreSQL instances.
 
 =head1 ATTRIBUTES
 
+=head2 config_file
+
+ my $file = $server->config_file;
+
+Path to the C<postgresql.conf> file.
+
+=cut
+
+  has config_file => (
+    is      => 'ro',
+    isa     => File,
+    coerce  => 1,
+    lazy    => 1,
+    default => sub {
+      my($self) = @_;
+      $self->data->file('postgresql.conf');
+    },
+  );
+
 =head2 config
 
  my $hash = $server->config;
@@ -92,7 +111,7 @@ call the L</save_config> method below.
     lazy    => 1,
     default => sub {
       my($self) = @_;
-      ConfigLoad($self->data->file('postgresql.conf'));
+      ConfigLoad($self->config_file);
     },
   );
 
@@ -155,15 +174,108 @@ Returns the version of the PostgreSQL server.
 
 =head2 create
 
- $server->create;
+ Database:Server::PostgreSQL->create($root);
 
-Create the PostgreSQL instance.  This involves calling C<initdb>
+(class method)
+Create, initalize a PostgreSQL instance, rooted under C<$root>.  Returns
+a hash reference which can be passed into C<new> to reconstitute the 
+database instance.  Example:
+
+ my $arg = Database::Server::PostgreSQL->create("/tmp/foo");
+ my $server = Database::Server::PostgreSQL->new(%$arg);
+
+=cut
+
+  sub create
+  {
+    my(undef, $root) = @_;
+    $root = Dir->coerce($root);
+    my $data = $root->subdir( qw( var lib data ) );
+    my $run  = $root->subdir( qw( var run ) );
+    my $log  = $root->file( qw( var log postgres.log) );
+    my $etc  = $root->subdir( qw( etc ) );
+    $_->mkpath(0, 0700) for ($data,$run,$etc,$log->parent);
+    
+    my $server = __PACKAGE__->new(
+      data => $data,
+      log  => $log,
+    );
+    
+    $server->init;
+    
+    $server->config->{listen_addresses}  = '';
+    $server->config->{port}              = Database::Server->generate_port;
+    $server->config->{hba_file}          = $etc->file('pg_hba.conf')->stringify;
+    $server->config->{ident_file}        = $etc->file('pg_ident.conf')->stringify;
+    $server->config->{external_pid_file} = $run->file('postgres.pid')->stringify;
+    $server->config->{
+      $server->version->compat >= 9.3
+      ? 'unix_socket_directories'
+      : 'unix_socket_directory'}         = $run->stringify;
+    $server->save_config;
+    
+    undef $server;
+    
+    require File::Copy;
+    File::Copy::move($data->file($_), $etc->file($_))
+      || die "Move failed for $_: $!"
+      for qw( pg_hba.conf pg_ident.conf postgresql.conf );
+
+    $data->file('postgresql.conf')->spew("include '@{[ $etc->file('postgresql.conf') ]}'\n");
+
+    my %arg = (
+      config_file => $etc->file('postgresql.conf')->stringify,
+      data        => $data->stringify,
+      log         => $log->stringify,
+    );
+    
+    \%arg;
+  }
+
+=head2 env
+
+ my %env = $server->env;
+
+Returns a hash of the environment variables needed to connect to the
+PostgreSQL instance with the native tools (for example C<psql>).
+Usually this includes the correct values for C<PGHOST> and C<PGPORT>.
+
+=cut
+
+  sub env
+  {
+    my($self) = @_;
+
+    my %env;
+
+    my $socket = $self->config->{
+      $self->version->compat >= 9.3
+      ? 'unix_socket_directories'
+      : 'unix_socket_directory'};
+    
+    ($env{PGHOST}) = split ',', $socket if defined $socket;
+    $env{PGPORT} = $self->config->{port} // 5432;
+    
+    unless($ENV{PGHOST})
+    {
+      ($ENV{PGHOST}) = split ',', ($self->config->{listen_addresses}//'localhost');
+      $ENV{PGHOST} = 'localhost' if $ENV{PGHOST} =~ /^(0\.0\.0\.0|\:\:|\*)$/;
+    }
+    
+    %env;
+  }
+
+=head2 init
+
+ $server->init;
+
+Initalize the PostgreSQL instance.  This involves calling C<initdb>
 or C<pg_ctl initdb> with the appropriate options to produce the
 data files necessary for running the PostgreSQL instance.
 
 =cut
   
-  sub create
+  sub init
   {
     my($self) = @_;
     croak "@{[ $self->data ]} is not empty" if $self->data->children;
@@ -254,7 +366,7 @@ C<postgresql.conf> file.
   sub save_config
   {
     my($self) = @_;
-    ConfigSave($self->data->file('postgresql.conf'), $self->config);
+    ConfigSave($self->config_file, $self->config);
   }
   
   __PACKAGE__->meta->make_immutable;

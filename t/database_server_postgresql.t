@@ -28,9 +28,9 @@ subtest 'normal' => sub {
     like $version->compat, qr{^[0-9]+\.[0-9]+$}, 'verson.compat';
   };
 
-  subtest create => sub {
+  subtest init => sub {
     plan tests => 2;
-    my $ret = eval { $server->create };
+    my $ret = eval { $server->init };
     is $@, '', 'creating server did not crash';
  
     note "% @{ $ret->command }";
@@ -38,7 +38,7 @@ subtest 'normal' => sub {
     note "[err]\n@{[ $ret->err ]}" if $ret->err ne '';
     note "[exit]@{[ $ret->exit ]}";
   
-    ok $ret->is_success, 'created database';
+    ok $ret->is_success, 'init database';
   };
 
   $server->config->{listen_addresses} = '';
@@ -91,10 +91,10 @@ subtest 'normal' => sub {
   is $server->is_up, '', 'server is down after stopt';
 };
 
-subtest 'try to create server with existing data directory' => sub {
+subtest 'try to init server with existing data directory' => sub {
   plan tests => 1;
   my $data = dir( tempdir( CLEANUP => 1 ) );
   $data->file('roger.txt')->spew('anything');
-  eval { Database::Server::PostgreSQL->new( data => $data )->create };
+  eval { Database::Server::PostgreSQL->new( data => $data )->init };
   like $@, qr{^$data is not empty}, 'died with correct exception';
 };
