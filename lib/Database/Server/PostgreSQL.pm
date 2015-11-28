@@ -174,7 +174,7 @@ Returns the version of the PostgreSQL server.
 
 =head2 create
 
- Database:Server::PostgreSQL->create($root);
+ my $args = Database:Server::PostgreSQL->create($root);
 
 (class method)
 Create, initialize a PostgreSQL instance, rooted under C<$root>.  Returns
@@ -201,6 +201,7 @@ database instance.  Example:
       log  => $log,
     );
     
+    # TODO: check return value
     $server->init;
     
     $server->config->{listen_addresses}  = '';
