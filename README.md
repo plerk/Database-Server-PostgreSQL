@@ -1,4 +1,4 @@
-# Database::Server::PostgreSQL
+# Database::Server::PostgreSQL [![Build Status](https://secure.travis-ci.org/plicease/Database-Server-PostgreSQL.png)](http://travis-ci.org/plicease/Database-Server-PostgreSQL)
 
 Interface for PostgreSQL server instance
 
@@ -71,7 +71,7 @@ Returns the version of the PostgreSQL server.
 
 ## create
 
-    Database:Server::PostgreSQL->create($root);
+    my $args = Database:Server::PostgreSQL->create($root);
 
 (class method)
 Create, initialize a PostgreSQL instance, rooted under `$root`.  Returns
