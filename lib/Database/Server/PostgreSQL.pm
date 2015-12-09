@@ -350,7 +350,7 @@ Checks to see if the PostgreSQL instance is up.
   sub is_up
   {
     my($self) = @_;
-    my $ret = $self->run($self->pg_ctl, -D => $self->data, 'status');
+    my $ret = $self->run($self->pg_ctl, -D => $self->data, 'status', sub { shift() });
     !!$ret->is_success;
   }
 
