@@ -1,0 +1,6 @@
+#!/bin/sh
+rm -rf /tmp/Database-Server && \
+git clone --depth 2 https://github.com/plicease/Database-Server.git /tmp/Database-Server && \
+cd /tmp/Database-Server  && \
+dzil authordeps --missing | cpanm -n && \
+dzil install --install-command 'cpanm -n .'
