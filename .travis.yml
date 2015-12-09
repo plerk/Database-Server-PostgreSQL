@@ -1,6 +1,12 @@
 language: perl
 sudo: false
 
+services:
+  - postgresql
+
+addons:
+  postgresql: "9.3"
+
 install:
   - perlbrew list
   - sh corpus/install_database_server
