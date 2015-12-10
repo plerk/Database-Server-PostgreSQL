@@ -1,5 +1,4 @@
 Database::Server
-Database::Server::Role::Server
 ExtUtils::MakeMaker
 File::Which
 Moose
