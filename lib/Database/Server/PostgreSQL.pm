@@ -319,7 +319,7 @@ Starts the PostgreSQL instance.
   sub start
   {
     my($self) = @_;
-    $self->run($self->pg_ctl, -D => $self->data, 'start', maybe -l => $self->log);
+    $self->run($self->pg_ctl, '-w', -D => $self->data, 'start', maybe -l => $self->log);
   }
 
 =head2 stop
