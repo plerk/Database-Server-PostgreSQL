@@ -190,7 +190,7 @@ database instance.  Example:
   {
     my(undef, $root) = @_;
     $root = Dir->coerce($root);
-    my $data = $root->subdir( qw( var lib data ) );
+    my $data = $root->subdir( qw( var lib data postgres ) );
     my $run  = $root->subdir( qw( var run ) );
     my $log  = $root->file( qw( var log postgres.log) );
     my $etc  = $root->subdir( qw( etc ) );
