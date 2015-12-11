@@ -257,6 +257,7 @@ database instance.  Example:
 
 =head2 env
 
+ my \%env = $server->env($dbname);
  my \%env = $server->env;
 
 Returns a hash of the environment variables needed to connect to the
@@ -267,7 +268,9 @@ Usually this includes the correct values for C<PGHOST> and C<PGPORT>.
 
   sub env
   {
-    my($self, $sub) = @_;
+    my $self = shift;
+    my $sub = ref $_[-1] eq 'CODE' ? pop : undef;
+    my $dbname = shift // 'postgres';
 
     my %env;
 
@@ -275,7 +278,8 @@ Usually this includes the correct values for C<PGHOST> and C<PGPORT>.
       $self->version->compat >= 9.3
       ? 'unix_socket_directories'
       : 'unix_socket_directory'};
-    
+  
+    $env{PGDATABASE} = $dbname;
     ($env{PGHOST}) = split ',', $socket if defined $socket;
     $env{PGPORT} = $self->config->{port} // 5432;
     
