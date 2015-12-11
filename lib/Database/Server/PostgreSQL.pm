@@ -42,6 +42,7 @@ restarting and reloading PostgreSQL instances.
   use Path::Class qw( dir );
   use Database::Server::PostgreSQL::ConfigFile qw( ConfigLoad ConfigSave );
   use PerlX::Maybe qw( maybe );
+  use File::Temp qw( tempfile );
   use namespace::autoclean;
 
   with 'Database::Server::Role::Server';
@@ -490,9 +491,18 @@ The C<psql> options to use.
     my($self, $dbname, $sql, $options) = @_;
     $dbname  //= 'postgres';
     $options //= [];
-    $self->env(sub {
-      $self->run($self->psql, $dbname, '-vON_ERROR_STOP=1', @$options, -c => $sql);
+    
+    my($fh, $filename) = tempfile("pgXXXX", SUFFIX => '.sql');
+    print $fh $sql;
+    close $fh;
+    
+    my $ret = $self->env(sub {
+      $self->run($self->psql, $dbname, '-vON_ERROR_STOP=1', @$options, -f => $filename);
     });
+    
+    unlink $filename;
+    
+    $ret;
   }
 
 =head2 dsn
