@@ -83,6 +83,7 @@ database instance.  Example:
 
 ## env
 
+    my \%env = $server->env($dbname);
     my \%env = $server->env;
 
 Returns a hash of the environment variables needed to connect to the
