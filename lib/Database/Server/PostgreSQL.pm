@@ -460,9 +460,9 @@ Connect to the database using an interactive shell.
 
   sub interactive_shell
   {
-    my($self, $dbname) = @_;
+    my($self, $dbname, %args) = @_;
     $dbname //= 'postgres';
-    $self->env(sub { $self->run($self->psql, $dbname) });
+    $self->env(sub { $args{exec} ? exec $self->psql, $dbname : system $self->psql, $dbname });
     $self;
   }
 
@@ -576,3 +576,11 @@ package Database::Server::PostgreSQL::Version {
 }
 
 1;
+
+=head1 BUNDLED SOFTWARE
+
+This distribution comes bundled with apgdiff which may
+be licensed under the terms of the MIT License.  apgdiff
+is Copyright (c) 2006 StartNet s.r.o.
+
+=cut
