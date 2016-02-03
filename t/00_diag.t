@@ -12,6 +12,7 @@ my $post_diag;
 $modules{$_} = $_ for qw(
   Database::Server
   ExtUtils::MakeMaker
+  File::ShareDir::Install
   File::Which
   Moose
   MooseX::Types::Path::Class

@@ -187,6 +187,36 @@ Connect to the database using a non-interactive shell.
 
 Provide a DSN that can be fed into DBI to connect to the database using [DBI](https://metacpan.org/pod/DBI).  These drivers are supported: [DBD::Pg](https://metacpan.org/pod/DBD::Pg), [DBD::PgPP](https://metacpan.org/pod/DBD::PgPP), [DBD::PgPPSjis](https://metacpan.org/pod/DBD::PgPPSjis).
 
+## dump
+
+    $server->dump($dbname => $dest, %options);
+    $server->dump($dbname => $dest, %options, \@native_options);
+
+Dump data and/or schema from the given database.  If `$dbname` is `undef`
+then the `postgres` database will be used.  `$dest` may be either
+a filename, in which case the dump will be written to that file, or a
+scalar reference, in which case the dump will be written to that scalar.
+Native `pg_dump` options can be specified using `@native_options`.
+Supported [Database::Server](https://metacpan.org/pod/Database::Server) options include:
+
+- data
+
+    Include data in the dump.  Off by default.
+
+- schema
+
+    Include schema in the dump.  On by default.
+
+- access
+
+    Include access controls in the dump.  Off by default.
+
+# BUNDLED SOFTWARE
+
+This distribution comes bundled with apgdiff which may
+be licensed under the terms of the MIT License.  apgdiff
+is Copyright (c) 2006 StartNet s.r.o.
+
 # AUTHOR
 
 Graham Ollis &lt;plicease@cpan.org>

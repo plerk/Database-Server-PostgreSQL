@@ -85,6 +85,18 @@ restarting and reloading PostgreSQL instances.
       -x $file ? $file : die "unable to find pg_ctl";
     },
   );
+
+  has pg_dump => (
+    is      => 'ro',
+    isa     => File,
+    lazy    => 1,
+    coerce  => 1,
+    default => sub { 
+      my($self) = @_;
+      my $file = $self->bindir->file('pg_dump');
+      -x $file ? $file : die "unable to find pg_dump";
+    },
+  );
   
   has psql => (
     is      => 'ro',
@@ -93,7 +105,7 @@ restarting and reloading PostgreSQL instances.
     default => sub {
       my($self) = @_;
       my $file = $self->bindir->file('psql');
-      -x $file ? $file : die "unable to find pg_ctl";
+      -x $file ? $file : die "unable to find psql";
     },
   );
 
@@ -496,7 +508,7 @@ The C<psql> options to use.
     $dbname  //= 'postgres';
     $options //= [];
     
-    my($fh, $filename) = tempfile("pgXXXX", SUFFIX => '.sql');
+    my($fh, $filename) = tempfile("pgXXXX", SUFFIX => '.sql', TMPDIR => 1);
     print $fh $sql;
     close $fh;
     
@@ -537,6 +549,62 @@ Provide a DSN that can be fed into DBI to connect to the database using L<DBI>. 
       $dsn .= "host=@{[ $env->{PGHOST} ]}";
     }
     $dsn;
+  }
+
+=head2 dump
+
+ $server->dump($dbname => $dest, %options);
+ $server->dump($dbname => $dest, %options, \@native_options);
+
+Dump data and/or schema from the given database.  If C<$dbname> is C<undef>
+then the C<postgres> database will be used.  C<$dest> may be either
+a filename, in which case the dump will be written to that file, or a
+scalar reference, in which case the dump will be written to that scalar.
+Native C<pg_dump> options can be specified using C<@native_options>.
+Supported L<Database::Server> options include:
+
+=over 4
+
+=item data
+
+Include data in the dump.  Off by default.
+
+=item schema
+
+Include schema in the dump.  On by default.
+
+=item access
+
+Include access controls in the dump.  Off by default.
+
+=back
+
+=cut
+
+  sub dump
+  {
+    my @options = ref $_[-1] eq 'ARRAY' ? @{ pop() } : ();
+    my($self, $dbname, $dest, %options) = @_;
+    $dbname //= 'postgres';
+
+    push @options, -f => $dest unless ref $dest;
+    
+    $options{data}   //= 0;
+    $options{schema} //= 1;
+    $options{access} //= 0;
+
+    croak "requested dumping of neither data nor schema"
+      unless $options{data} || $options{schema};
+
+    unshift @options, '-a' if $options{data} && !$options{schema};
+    unshift @options, '-s' if $options{schema} && !$options{data};
+    unshift @options, '-xO' if !$options{access};
+    
+    my $ret = $self->env(sub { $self->run($self->pg_dump, @options, $dbname) });
+
+    $$dest = $ret->out if ref $dest eq 'SCALAR';
+
+    $self;
   }
 
 }

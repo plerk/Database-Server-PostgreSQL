@@ -8,7 +8,7 @@ use IO::Socket::IP;
 use File::Spec;
 
 subtest 'normal' => sub {
-  plan tests => 11;
+  plan tests => 12;
   
   my $data = dir( tempdir( CLEANUP => 1 ) );
   my $server = Database::Server::PostgreSQL->new(
@@ -136,6 +136,54 @@ subtest 'normal' => sub {
   
   };
   
+  subtest dump => sub {
+    plan tests => 6;
+    $server->create_database('dumptest1');
+    $server->shell('dumptest1', "CREATE TABLE foo (id int); INSERT INTO foo (id) VALUES (22);", ['-q']);
+
+    my $dump = '';
+    $server->dump('dumptest1', \$dump, data => 0, schema => 1);
+    isnt $dump, '', 'there is a dump (schema only)';
+    
+    $server->create_database('dumptest_schema_only');
+    $server->shell('dumptest_schema_only', $dump, ['-q']);
+    
+    $dump = '';
+    $server->dump('dumptest1', \$dump, data => 1, schema => 1);
+    isnt $dump, '', 'there is a dump (data only)';
+
+    $server->create_database('dumptest_schema_and_data');
+    $server->shell('dumptest_schema_and_data', $dump, ['-q']);
+    
+    my $dbh = eval {
+      DBI->connect($server->dsn('Pg', 'dumptest_schema_only'), '', '', { RaiseError => 1, AutoCommit => 1 });
+    };
+    
+    SKIP: {
+      skip "test requires DBD::Pg $@", 4 unless $dbh;
+      
+      my $h = eval {
+        my $sth = $dbh->prepare(q{ SELECT * FROM foo });
+        $sth->execute;
+        $sth->fetchrow_hashref;
+      };
+      is $@, '', 'did not crash';
+      is $h, undef, 'schema only';
+      
+      $dbh = DBI->connect($server->dsn('Pg', 'dumptest_schema_and_data'), '', '', { RaiseError => 1, AutoCommit => 1 });
+      
+      $h = eval {
+        my $sth = $dbh->prepare(q{ SELECT * FROM foo });
+        $sth->execute;
+        $sth->fetchrow_hashref;
+      };
+      is $@, '', 'did not crash';
+      is_deeply $h, { id => 22 }, 'schema only';
+
+    };
+    
+  };
+ 
   subtest stop => sub {
     plan tests => 2;
     my $ret = eval { $server->stop };
@@ -147,7 +195,7 @@ subtest 'normal' => sub {
 
     ok $ret->is_success, 'stop database';
   };
- 
+  
   is $server->is_up, '', 'server is down after stopt';
 };
 

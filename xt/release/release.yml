@@ -12,6 +12,8 @@ pod_spelling_system:
     - env
     - dsn
     - DSN
+    - StartNet
+    - apgdiff
 
 pod_coverage:
   skip: 0
