@@ -602,6 +602,8 @@ Include access controls in the dump.  Off by default.
     
     my $ret = $self->env(sub { $self->run($self->pg_dump, @options, $dbname) });
 
+    die "dump failed: @{[ $ret->err ]}" unless $ret->is_success;
+
     $$dest = $ret->out if ref $dest eq 'SCALAR';
 
     $self;
