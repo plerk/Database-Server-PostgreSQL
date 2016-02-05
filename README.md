@@ -161,9 +161,9 @@ Drop the database with the given name.
 
 Connect to the database using an interactive shell.
 
-## shell
+## load
 
-    $server->shell($dbname, $sql, \@options);
+    $server->load($dbname, $sql, \@options);
 
 Connect to the database using a non-interactive shell.
 
